@@ -3,11 +3,11 @@
 return [
     'paths' => ['api/*'],
     'allowed_methods' => ['*'],
-    'allowed_origins' => ['http://localhost:8001'], // WordPress dev URL
+    'allowed_origins' => ['http://kinetic-demo.local'], // WordPress dev URL
     'allowed_origins_patterns' => [],
     'allowed_headers' => ['*'],
     'exposed_headers' => [],
     'max_age' => 0,
-    'supports_credentials' => false,
-    //'supports_credentials' => true, // required if you use Sanctum
+    //'supports_credentials' => false,
+    'supports_credentials' => true, // required if you use Sanctum
 ];
