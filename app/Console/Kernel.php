@@ -15,5 +15,6 @@ class Kernel extends ConsoleKernel
     {
         // Run WMATA fetch command every minute
         $schedule->command('wmata:fetch-train-data')->everyMinute();
+        $schedule->command('stations:fetch')->daily(); // or every hour
     }
 }
