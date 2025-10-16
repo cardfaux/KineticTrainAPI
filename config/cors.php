@@ -3,7 +3,7 @@
 return [
     'paths' => ['api/*'],
     'allowed_methods' => ['*'],
-    'allowed_origins' => ['http://kinetic-demo.local'], // WordPress dev URL
+    'allowed_origins' => ['http://train-tracker.test'], // WordPress dev URL
     'allowed_origins_patterns' => [],
     'allowed_headers' => ['*'],
     'exposed_headers' => [],
