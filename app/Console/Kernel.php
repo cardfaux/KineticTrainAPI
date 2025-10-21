@@ -13,8 +13,8 @@ class Kernel extends ConsoleKernel
 
     protected function schedule(Schedule $schedule): void
     {
-        // Run WMATA fetch command every minute
-        $schedule->command('wmata:fetch-train-data')->everyMinute();
-        $schedule->command('stations:fetch')->daily(); // or every hour
+        // Run WMATA fetch command every thirty seconds
+        $schedule->command('wmata:fetch-train-data')->everyThirtySeconds();
+        //$schedule->command('stations:fetch')->daily(); // or every hour
     }
 }
