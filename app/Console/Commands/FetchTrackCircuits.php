@@ -28,18 +28,18 @@ class FetchTrackCircuits extends Command
      */
     public function handle()
     {
-        $this->info('Fetching track circuits from WMATA API...');
+        // Force load .env
+        $dotenv = \Dotenv\Dotenv::createImmutable(base_path());
+        $dotenv->load();
 
         $apiKey = env('WMATA_API_KEY');
-
         if (!$apiKey) {
             $this->error('WMATA_API_KEY is not set in .env');
             return 1;
         }
 
-        $response = Http::withHeaders([
-            'api_key' => $apiKey,
-        ])->get('https://api.wmata.com/TrainPositions/TrackCircuits?contentType=json');
+        $response = Http::withHeaders(['api_key' => $apiKey])
+            ->get('https://api.wmata.com/TrainPositions/TrackCircuits?contentType=json');
 
         if ($response->failed()) {
             $this->error('Failed to fetch track circuits from WMATA API.');
@@ -47,8 +47,6 @@ class FetchTrackCircuits extends Command
         }
 
         $trackCircuits = $response->json('TrackCircuits', []);
-
-        $count = 0;
 
         foreach ($trackCircuits as $circuit) {
             TrackCircuit::updateOrCreate(
@@ -58,10 +56,9 @@ class FetchTrackCircuits extends Command
                     'neighbors' => json_encode($circuit['Neighbors']),
                 ]
             );
-            $count++;
         }
 
-        $this->info("Successfully updated {$count} track circuits.");
+        $this->info('Track circuits successfully updated.');
         return 0;
     }
 }

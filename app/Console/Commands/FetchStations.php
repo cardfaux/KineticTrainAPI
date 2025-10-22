@@ -29,6 +29,10 @@ class FetchStations extends Command
      */
     public function handle()
     {
+        // Force load .env
+        $dotenv = \Dotenv\Dotenv::createImmutable(base_path());
+        $dotenv->load();
+
         $apiKey = env('WMATA_API_KEY');
 
         if (!$apiKey) {
@@ -36,9 +40,8 @@ class FetchStations extends Command
             return 1;
         }
 
-        $response = Http::withHeaders([
-            'api_key' => $apiKey
-        ])->get('https://api.wmata.com/Rail.svc/json/jStations');
+        $response = Http::withHeaders(['api_key' => $apiKey])
+            ->get('https://api.wmata.com/Rail.svc/json/jStations');
 
         if (!$response->successful()) {
             $this->error('Failed to fetch stations from WMATA API');
@@ -46,11 +49,6 @@ class FetchStations extends Command
         }
 
         $stations = $response->json()['Stations'] ?? [];
-
-        if (empty($stations)) {
-            $this->info('No stations found in API response.');
-            return 0;
-        }
 
         foreach ($stations as $station) {
             Station::updateOrCreate(

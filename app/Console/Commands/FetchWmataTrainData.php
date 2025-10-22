@@ -27,47 +27,42 @@ class FetchWmataTrainData extends Command
      */
     public function handle()
     {
-        // Only auto-loop in local/dev environment
-        $autoLoop = app()->environment('local');
+        // Force load .env
+        $dotenv = \Dotenv\Dotenv::createImmutable(base_path());
+        $dotenv->load();
 
-        do {
-            $this->info('Fetching WMATA train data...');
-            $apiKey = env('WMATA_API_KEY');
-            $url = 'https://api.wmata.com/TrainPositions/TrainPositions?contentType=json';
+        $apiKey = env('WMATA_API_KEY');
+        if (!$apiKey) {
+            $this->error('WMATA_API_KEY is not set in .env');
+            return 1;
+        }
 
-            try {
-                $response = Http::withHeaders([
-                    'api_key' => $apiKey
-                ])->get($url);
+        $response = Http::withHeaders(['api_key' => $apiKey])
+            ->get('https://api.wmata.com/TrainPositions/TrainPositions?contentType=json');
 
-                $data = $response->json();
+        if ($response->failed()) {
+            $this->error('Error fetching WMATA train data.');
+            return 1;
+        }
 
-                foreach ($data['TrainPositions'] as $train) {
-                    Train::updateOrCreate(
-                        ['train_id' => (string) ($train['TrainId'] ?? uniqid('unknown_'))],
-                        [
-                            'train_number'            => $train['TrainNumber'] ?? null,
-                            'car_count'               => $train['CarCount'] ?? null,
-                            'direction'               => $train['DirectionNum'] ?? null,
-                            'circuit_id'              => $train['CircuitId'] ?? null,
-                            'destination_station_code' => $train['DestinationStationCode'] ?? null,
-                            'line_code'               => $train['LineCode'] ?? null,
-                            'seconds_at_location'     => $train['SecondsAtLocation'] ?? null,
-                            'service_type'            => $train['ServiceType'] ?? null,
-                            'last_update'             => now(),
-                        ]
-                    );
-                }
+        foreach ($response->json('TrainPositions', []) as $train) {
+            Train::updateOrCreate(
+                ['train_id' => (string) ($train['TrainId'] ?? uniqid('unknown_'))],
+                [
+                    'train_number' => $train['TrainNumber'] ?? null,
+                    'car_count' => $train['CarCount'] ?? null,
+                    'direction' => $train['DirectionNum'] ?? null,
+                    'circuit_id' => $train['CircuitId'] ?? null,
+                    'destination_station_code' => $train['DestinationStationCode'] ?? null,
+                    'line_code' => $train['LineCode'] ?? null,
+                    'seconds_at_location' => $train['SecondsAtLocation'] ?? null,
+                    'service_type' => $train['ServiceType'] ?? null,
+                    'last_update' => now(),
+                ]
+            );
+        }
 
-                $this->info('WMATA train data updated successfully.');
-            } catch (\Exception $e) {
-                $this->error('Error fetching WMATA train data: ' . $e->getMessage());
-            }
-
-            // Only sleep if we are in dev/local
-            if ($autoLoop) {
-                sleep(30);
-            }
-        } while ($autoLoop); // loop forever in local
+        $this->info('WMATA train data updated successfully.');
+        return 0;
     }
 }
